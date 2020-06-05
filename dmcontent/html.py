@@ -83,6 +83,12 @@ def to_summary_list_rows(questions, **kwargs) -> List[dict]:
 
 
 def text_to_html(value, **kwargs):
+    """Convert a string to a HTML string, optionally modifying it first.
+
+    :param bool capitalize_first: If True, the first letter of any text will be capitalized
+    :param bool format_links: If True any HTTP URLs in any text will be turned into HTML <a> elements
+    :param bool preserve_line_breaks: If True HTTP newline sequences (\\r\\n) will be turned into HTML <br> elements
+    """
     if kwargs.get("capitalize_first") is True:
         value = capitalize_first(value)
 
