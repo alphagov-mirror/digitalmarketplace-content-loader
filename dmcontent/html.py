@@ -83,13 +83,13 @@ def to_summary_list_rows(questions, **kwargs) -> List[dict]:
 
 
 def text_to_html(value, **kwargs):
-    if "capitalize_first" in kwargs:
+    if kwargs.get("capitalize_first") is True:
         value = capitalize_first(value)
 
-    if "format_links" in kwargs:
+    if kwargs.get("format_links") is True:
         value = format_links(value)
 
-    if "preserve_line_breaks" in kwargs:
+    if kwargs.get("preserve_line_breaks") is True:
         # replace_newlines_with_breaks escapes its input anyway
         # so wrapping with Markup here is fine.
         value = Markup(replace_newlines_with_breaks(value))
