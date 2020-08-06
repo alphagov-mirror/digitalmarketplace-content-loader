@@ -101,7 +101,7 @@ def to_summary_list_row(question, *, action_link=None, **kwargs) -> List[dict]:
             question.empty_message
         except AttributeError:
             question.empty_message = "Not answered"
-        question_label = question.label + ' (Optional)' if not question.answer_required else question.label
+        question_label = question.label + ' (Optional)' if question.is_optional else question.label
         if question.is_empty:
             question_value = (
                 Markup(f'<a class="govuk-link" href="{action_link}">{question.empty_message}</a>')
