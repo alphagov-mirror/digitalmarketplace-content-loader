@@ -1,8 +1,14 @@
 """
 Create forms to answer questions using govuk-frontend macros.
+
+The main function in this module is `from_question`. It should be possible to
+do everything you might want to do just by calling `from_question` with a
+content loader Question.
+
+Read the docstring for `from_question` for more detail on how this works.
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from jinja2 import Markup, escape
 
@@ -11,7 +17,50 @@ from dmutils.forms.errors import govuk_error
 from dmcontent.questions import Question
 
 
-__all__ = ["govuk_input"]
+__all__ = ["from_question", "govuk_input"]
+
+
+def from_question(
+    question: Question, data: Optional[dict] = None, errors: Optional[dict] = None
+) -> Optional[Tuple[str, dict]]:
+    """Create parameters object for govuk-frontend macros from a question
+
+    `from_question` aims to solve the developer need of
+
+        Given a content loader Question
+        I want to create a form element using the GOV.UK Design System
+        So that the user gets a good experience
+
+    in a way that requires the developer to know as little as possible about
+    the Question object in question.
+
+    `from_question` takes a Question and returns the name of the govuk-frontend
+    macro to call and the parameters to call it with. Calling the macro with
+    the parameters is left to the app developer.
+
+    A little bit of Jinja magic is required for this; assuming you have called
+    `from_question` already and have the macro name and parameters, you need a
+    table of macro names to macros in a Jinja template:
+
+        {% set govuk_forms = {
+            "govukInput": govukInput,
+            "govukRadios": govukRadios,
+            ...
+        } %}
+
+        {{ govuk_frontend[macro_name](parameters) }}
+
+    :param question: A Question or QuestionSummary
+    :param data: A dict that may contain the answer for question
+    :param errors: A dict which may contain an error message for the question
+
+    :returns: The name of the macro and the parameters in a tuple, or None
+              if we don't know how to handle this type of question
+    """
+    if question.type == "text":
+        return "govukInput", govuk_input(question, data, errors)
+    else:
+        return None
 
 
 def govuk_input(
