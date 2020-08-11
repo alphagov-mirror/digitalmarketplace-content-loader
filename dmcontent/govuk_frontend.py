@@ -17,12 +17,12 @@ from dmutils.forms.errors import govuk_error
 from dmcontent.questions import Question
 
 
-__all__ = ["from_question", "govuk_input"]
+__all__ = ["from_question", "govuk_input", "govuk_label"]
 
 
 def from_question(
     question: Question, data: Optional[dict] = None, errors: Optional[dict] = None
-) -> Optional[Tuple[str, dict]]:
+) -> Optional[dict]:
     """Create parameters object for govuk-frontend macros from a question
 
     `from_question` aims to solve the developer need of
@@ -48,17 +48,26 @@ def from_question(
             ...
         } %}
 
-        {{ govuk_frontend[macro_name](parameters) }}
+        {% set form = from_question(question) %}
+
+        {% if form.label %}
+        {{ govukLabel[form.label] }}
+        {% endif %}
+        {{ govuk_forms[form.macro_name](form.parameters) }}
 
     :param question: A Question or QuestionSummary
     :param data: A dict that may contain the answer for question
     :param errors: A dict which may contain an error message for the question
 
-    :returns: The name of the macro and the parameters in a tuple, or None
+    :returns: A dict with the macro name, macro parameters, and labels, or None
               if we don't know how to handle this type of question
     """
     if question.type == "text":
-        return "govukInput", govuk_input(question, data, errors)
+        return {
+            "label": govuk_label(question),
+            "macro_name": "govukInput",
+            "params": govuk_input(question, data, errors),
+        }
     else:
         return None
 
@@ -72,6 +81,25 @@ def govuk_input(
     params["classes"] = "app-text-input--height-compatible"
 
     return params
+
+
+def govuk_label(question: Question) -> dict:
+    label_text = question.question
+    if question.is_optional:
+        # GOV.UK Design System says
+        # > mark the labels of optional fields with '(optional)'
+        label_text += " (optional)"
+
+    return {
+        # Style the label as a page heading, following the
+        # GOV.UK Design System question pages pattern at
+        # https://design-system.service.gov.uk/patterns/question-pages/
+        "classes": "govuk-label--l",
+        "isPageHeading": True,
+
+        "for": f"input-{question.id}",
+        "text": label_text,
+    }
 
 
 def _params(
@@ -94,7 +122,6 @@ def _params(
         - errorMessage (optional)
         - hint (optional)
         - id
-        - label
         - name
         - value (optional)
 
@@ -106,42 +133,9 @@ def _params(
         "name": question.id,
     }
 
-    label_text = question.question
-    if question.is_optional:
-        # GOV.UK Design System says
-        # > mark the labels of optional fields with '(optional)'
-        label_text += " (optional)"
-
-    params["label"] = {
-        # Style the label as a page heading, following the
-        # GOV.UK Design System question pages pattern at
-        # https://design-system.service.gov.uk/patterns/question-pages/
-        "classes": "govuk-label--l",
-        "isPageHeading": True,
-
-        "text": label_text,
-    }
-
-    hint_html = Markup()
-    if question.get("question_advice"):
-        # Put the question advice inside the hint, wrapped in a div
-        # We add the class .app-hint--text so the question advice
-        # can be styled like a normal paragraph with the following Sass
-        #
-        #     .app-hint--text {
-        #       @extend %govuk-body--m
-        #     }
-        hint_html += Markup('<div class="app-hint--text">\n')
-        hint_html += escape(question.question_advice)
-        hint_html += Markup("\n</div>")
-        if question.get("hint"):
-            hint_html += "\n"
 
     if question.get("hint"):
-        hint_html += escape(question.hint)
-
-    if hint_html:
-        params["hint"] = {"html": hint_html}
+        params["hint"] = {"text": question.hint}
 
     if data and question.id in data:
         params["value"] = data[question.id]
