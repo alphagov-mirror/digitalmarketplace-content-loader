@@ -75,6 +75,12 @@ def from_question(
             "macro_name": "dmListInput",
             "params": dm_list_input(question, data, errors, **kwargs)
         }
+    elif question.type == "textbox_large":
+        return {
+            "label": govuk_label(question, **kwargs),
+            "macro_name": "govukCharacterCount",
+            "params": govuk_character_count(question, data, errors, **kwargs)
+        }
     else:
         return None
 
@@ -151,6 +157,17 @@ def govuk_fieldset(question: Question, *, is_page_heading: bool = True, **kwargs
         fieldset["legend"]["classes"] = "govuk-fieldset__legend--l"
 
     return fieldset
+
+
+def govuk_character_count(
+    question: Question, data: Optional[dict] = None, errors: Optional[dict] = None, **kwargs
+) -> dict:
+    params = _params(question, data, errors)
+
+    if question.get("max_length_in_words"):
+        params["maxwords"] = question.max_length_in_words
+
+    return params
 
 
 def get_label_text(question: Question) -> str:
