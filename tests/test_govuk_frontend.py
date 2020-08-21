@@ -6,6 +6,7 @@ from dmcontent.govuk_frontend import (
     from_question,
     govuk_character_count,
     govuk_input,
+    govuk_checkboxes,
     govuk_radios,
     dm_list_input,
     govuk_fieldset,
@@ -95,6 +96,81 @@ class TestRadios:
         ]
 
         assert govuk_radios(question)["items"] == [
+            {"text": "Yes", "value": "yes", "hint": {"text": "Affirmative."}},
+            {"text": "No", "value": "no", "hint": {"text": "Negative."}},
+        ]
+
+    def test_from_question(self, question, snapshot):
+        form = from_question(question)
+
+        assert "fieldset" in form
+        assert form["macro_name"] == "govukRadios"
+        assert form["params"] == snapshot
+
+    def test_from_question_with_is_page_heading_false(self, question, snapshot):
+        fieldset = from_question(question)["fieldset"]
+
+        assert "isPageHeading" not in fieldset or fieldset["isPageHeading"] is False
+        assert fieldset == snapshot
+
+    def test_from_question_with_data(self, question, snapshot):
+        data = {"yesOrNo": "yes"}
+
+        form = from_question(question, data)
+
+        assert "value" not in form["params"]
+        assert form["params"]["items"][0]["checked"] is True
+        assert "checked" not in form["params"]["items"][1]
+        assert form == snapshot
+
+    def test_from_question_with_errors(self, question, snapshot):
+        errors = {
+            "yesOrNo": {
+                "input_name": "title",
+                "href": "#input-yesOrNo",
+                "question": "Yes or no?",
+                "message": "Select yes or no,",
+            }
+        }
+
+        form = from_question(question, errors=errors)
+
+        assert "errorMessage" in form["params"]
+        assert form == snapshot
+
+
+class TestCheckboxes:
+    @pytest.fixture
+    def question(self):
+        return Question(
+            {
+                "id": "yesOrNo",
+                "name": "Yes or no",
+                "question": "Yes or no?",
+                "type": "radios",
+                "options": [
+                    {"label": "Yes", "value": "yes"},
+                    {"label": "No", "value": "no"},
+                ],
+            }
+        )
+
+    def test_govuk_checkboxes(self, question, snapshot):
+        assert govuk_checkboxes(question) == snapshot
+
+    def test_govuk_checkboxes_id_prefix(self, question):
+        params = govuk_checkboxes(question)
+
+        assert "id" not in params
+        assert params["idPrefix"] == "input-yesOrNo"
+
+    def test_govuk_checkbox_options_with_descriptions(self, question):
+        question.options = [
+            {"label": "Yes", "value": "yes", "description": "Affirmative."},
+            {"label": "No", "value": "no", "description": "Negative."},
+        ]
+
+        assert govuk_checkboxes(question)["items"] == [
             {"text": "Yes", "value": "yes", "hint": {"text": "Affirmative."}},
             {"text": "No", "value": "no", "hint": {"text": "Negative."}},
         ]
