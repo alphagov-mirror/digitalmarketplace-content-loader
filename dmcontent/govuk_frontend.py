@@ -71,6 +71,12 @@ def from_question(
             "macro_name": "govukInput",
             "params": govuk_input(question, data, errors, **kwargs),
         }
+    if question.type == "date":
+        return {
+            "fieldset": govuk_fieldset(question, **kwargs),
+            "macro_name": "govukDateInput",
+            "params": govuk_date_input(question, data, errors, **kwargs),
+        }
     elif question.type == "list":
         return {
             "macro_name": "dmListInput",
@@ -99,6 +105,41 @@ def govuk_input(
 
     params = _params(question, data, errors)
     params["classes"] = "app-text-input--height-compatible"
+
+    return params
+
+
+def govuk_date_input(
+    question: Question, data: Optional[dict] = None, errors: Optional[dict] = None, **kwargs
+) -> dict:
+    """Create govukRadios macro parameters from a radios question"""
+
+    params = _params(question, data, errors)
+
+    params["namePrefix"] = question.id
+
+    params["items"] = [
+        {
+            "name": "day",
+            "classes": "govuk-input--width-2"
+        },
+        {
+            "name": "month",
+            "classes": "govuk-input--width-2"
+        },
+        {
+            "name": "year",
+            "classes": "govuk-input--width-4"
+        }
+    ]
+
+    for item in params["items"]:
+        if data:
+            answer_key = f"{question.id}-{item['name']}"
+            if data.get(answer_key):
+                item["value"] = data[answer_key]
+        if errors and errors.get(question.id):
+            item["classes"] += ' govuk-input--error'
 
     return params
 
