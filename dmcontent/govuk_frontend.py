@@ -246,7 +246,7 @@ def dm_pricing_input(
     # "price". If there is just a price field we don't want a fieldset.
     if len(question.fields) == 1:
         return {
-            "label": govuk_label(question),
+            "label": govuk_label(question, **kwargs),
             "macro_name": "govukInput",
             "params": govuk_input(
                 question,

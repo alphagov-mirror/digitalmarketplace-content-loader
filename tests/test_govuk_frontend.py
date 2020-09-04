@@ -521,6 +521,16 @@ class TestDmPricingInput:
         with pytest.raises(NotImplementedError):
             dm_pricing_input(pricing_question)
 
+    def test_dm_pricing_input_is_page_heading_false(self, question):
+        form = dm_pricing_input(question, is_page_heading=False)
+
+        if "label" in form:
+            assert "isPageHeading" not in form["label"]
+        elif "fieldset" in form:
+            assert "isPageHeading" not in form["fieldset"]
+        else:
+            raise ValueError("form should have label or fieldset")
+
     def test_dm_pricing_input_prefix_and_suffix(self, question):
         form = dm_pricing_input(question)
 
