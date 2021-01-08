@@ -20,6 +20,7 @@ from dmcontent.govuk_frontend import (
     govuk_label,
     _params,
     render,
+    render_question,
 )
 
 
@@ -972,3 +973,39 @@ bar
     'params': {'items': [{'conditional': {'html': {'macro_name': 'test'}}}]},
 }]) }}""")
         assert template.render() == "<div><p>foo</p></div>"
+
+
+class TestRenderQuestion:
+
+    def test_it_calls_from_question_and_render(self):
+        ctx = mock.Mock()
+        question = mock.Mock()
+        data = mock.Mock()
+        errors = mock.Mock()
+
+        with mock.patch("dmcontent.govuk_frontend.from_question") as from_question:
+            with mock.patch("dmcontent.govuk_frontend.render") as render:
+                # with default args
+                render_question(ctx, question)
+
+                assert from_question.call_args == mock.call(question, None, None)
+                assert render.call_args == mock.call(
+                    ctx,
+                    from_question(question, None, None),
+                    question=question
+                )
+
+                # with args and kwargs
+                render_question(ctx, question, data, errors, some_kwarg="foobar")
+
+                assert from_question.call_args == mock.call(
+                    question, data, errors, some_kwarg="foobar"
+                )
+                assert render.call_args == mock.call(
+                    ctx,
+                    from_question(question, data, errors, some_kwarg="foobar"),
+                    question=question
+                )
+
+    def test_it_renders_question_advice(self):
+        pass
